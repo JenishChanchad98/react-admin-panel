@@ -1,9 +1,12 @@
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { commonStyles } from "../../styles/common";
+import { useSelector } from "react-redux";
 
-const UserProfile = ({ userData }) => {
+const UserProfile = () => {
   const navigate = useNavigate();
+
+  const userData = useSelector((state) => state.user);
 
   const getInitials = (name) => {
     if (!name) return "👤";

@@ -4,10 +4,12 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import { saveToken } from "../utils/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { loginAPI } from "../api/authApi";
+import { userLogin } from "../store/slices/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +37,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await loginAPI({ email, password });
-      saveToken(res.data.data);
+      const result = await dispatch(userLogin({ email, password })).unwrap();
+      saveToken(result.data.token);
       navigate("/dashboard");
     } catch (err) {
       setError(
