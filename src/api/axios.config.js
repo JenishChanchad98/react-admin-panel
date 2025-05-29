@@ -1,6 +1,7 @@
 import axios from "axios";
 import store from "../store";
 import { getToken } from "../utils/auth";
+import { showToast } from "../utils/toast";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
@@ -26,17 +27,32 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Show success toast for successful POST, PUT, DELETE requests
+    if (response.config.method !== 'get' && response.data?.message) {
+      showToast.success(response.data.message);
+    }
+    return response;
+  },
   (error) => {
+    // Handle unauthorized access
     if (error.response?.status === 401) {
       store.dispatch({ type: "auth/logout" });
+      showToast.error("Session expired. Please login again.");
     }
+    
     // Handle network errors
     if (!error.response) {
+      showToast.error("Network error. Please check your internet connection.");
       return Promise.reject({
         message: "Network error. Please check your internet connection.",
       });
     }
+
+    // Handle API errors with messages
+    const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+    showToast.error(errorMessage);
+    
     return Promise.reject(error);
   }
 );

@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { removeToken, getToken } from "../utils/auth";
-import { useEffect, useState } from "react";
+import { removeToken } from "../utils/auth";
+import { useEffect } from "react";
 import SearchInput from "./common/SearchInput";
 import UserProfile from "./common/UserProfile";
 import LogoutButton from "./common/LogoutButton";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProfile } from "../store/slices/userProfileSlice";
 
 const headerStyles = {
   container: {
@@ -32,13 +34,14 @@ const headerStyles = {
 };
 
 export default function Header() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [userData, setUserData] = useState(null);
+
+  const { user, loading } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    const data = getToken();
-    setUserData(data.user);
-  }, []);
+    dispatch(fetchProfile());
+  }, [dispatch]);
 
   const handleLogout = () => {
     removeToken();
@@ -55,8 +58,9 @@ export default function Header() {
       <div style={headerStyles.leftSection}>
         <SearchInput onChange={handleSearch} />
       </div>
+
       <div style={headerStyles.rightSection}>
-        <UserProfile userData={userData} />
+        <UserProfile userData={user} loading={loading} />
         <LogoutButton onClick={handleLogout} />
       </div>
     </header>

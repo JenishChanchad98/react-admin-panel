@@ -2,12 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import axios from "../api/axiosInstance";
 import { saveToken } from "../utils/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { userRegister } from "../store/slices/authSlice";
+
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import Spinner from "../components/Spinner";
 
 export default function Register() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,10 +22,10 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   const validateForm = () => {
-    if (!fullName.trim()) return "Full Name is required.";
+    if (!fullName.trim()) return "Full name is required.";
     if (!email.trim()) return "Email is required.";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return "Invalid email format.";
@@ -32,27 +39,26 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
+    const error = validateForm();
+    if (error) {
+      setValidationError(error);
       return;
     }
-
+    setValidationError("");
     setLoading(true);
+
     try {
-      const res = await axios.post("/register", {
-        fullName,
-        email,
-        mobileNo,
-        password,
-      });
-      saveToken(res.data.data);
-      navigate("/dashboard");
+      const result = await dispatch(
+        userRegister({ fullName, email, mobileNo, password })
+      ).unwrap();
+
+      saveToken(result.data.data);
+      toast.success(result.data.message || "Registration successful!");
+      setTimeout(() => navigate("/dashboard"), 1000);
     } catch (error) {
-      setError(
-        error?.response?.data?.message || "Registration failed. Try again."
+      toast.error(
+        error?.response?.data?.message ||
+          "Registration failed, please try again."
       );
     } finally {
       setLoading(false);
@@ -68,14 +74,15 @@ export default function Register() {
         justifyContent: "center",
       }}
     >
+      <ToastContainer position="top-right" autoClose={3000} newestOnTop />
       <div className="login-container">
         <h2>Sign Up</h2>
 
-        {error && (
+        {validationError && (
           <p
             style={{ color: "red", marginBottom: "16px", textAlign: "center" }}
           >
-            {error}
+            {validationError}
           </p>
         )}
 
@@ -84,23 +91,20 @@ export default function Register() {
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Full Name"
+            placeholder="Full name"
           />
-
           <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
           />
-
           <Input
             type="text"
             value={mobileNo}
             onChange={(e) => setMobileNo(e.target.value)}
             placeholder="Mobile Number"
           />
-
           <div style={{ position: "relative" }}>
             <Input
               type={showPassword ? "text" : "password"}
@@ -121,8 +125,19 @@ export default function Register() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
-
-          <Button type="submit">{loading ? "Signing up..." : "Sign Up"}</Button>
+          {loading ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 20,
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <Button type="submit">Register</Button>
+          )}
         </form>
 
         <p style={{ marginTop: "15px", textAlign: "center" }}>

@@ -16,6 +16,21 @@ export const userLogin = createAsyncThunk(
   }
 );
 
+export const userRegister = createAsyncThunk(
+  "auth/register",
+  async (payload, { rejectWithValue }) => {
+    console.log("PAYLOAD : >>", payload);
+    try {
+      const response = await api.post("/register", payload);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "An error occurred during signup" }
+      );
+    }
+  }
+);
+
 const initialState = {
   user: null,
   token: null,
@@ -52,6 +67,24 @@ const authSlice = createSlice({
         state.token = action.payload.data.token;
       })
       .addCase(userLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload
+          ? action.payload.message
+          : action.error.message;
+      })
+
+      // Register actions
+      .addCase(userRegister.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(userRegister.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data.user;
+        state.token = action.payload.data.token;
+      })
+      .addCase(userRegister.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload
           ? action.payload.message

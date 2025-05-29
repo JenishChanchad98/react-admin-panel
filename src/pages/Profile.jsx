@@ -3,6 +3,7 @@ import { FaUser, FaEnvelope, FaPhone, FaCamera } from "react-icons/fa";
 import { commonStyles } from "../styles/common";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile, updateProfile } from "../store/slices/userProfileSlice";
+import Spinner from "../components/Spinner";
 
 export default function Profile() {
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ export default function Profile() {
   if (loading && !user) {
     return (
       <div style={{ ...commonStyles.flexCenter, height: "100vh" }}>
-        Loading...
+        <Spinner />
       </div>
     );
   }
@@ -154,21 +155,32 @@ export default function Profile() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: commonStyles.borderRadius.medium,
-                    border: "none",
-                    background: commonStyles.colors.primary,
-                    color: "white",
-                    cursor: "pointer",
-                    ...commonStyles.transition,
-                  }}
-                >
-                  {saving ? "Saving..." : "Save Name"}
-                </button>
+                {saving ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: "10px",
+                    }}
+                  >
+                    <Spinner />
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: commonStyles.borderRadius.medium,
+                      border: "none",
+                      background: commonStyles.colors.primary,
+                      color: "white",
+                      cursor: "pointer",
+                      ...commonStyles.transition,
+                    }}
+                  >
+                    Submit
+                  </button>
+                )}
               </form>
             ) : (
               <div>

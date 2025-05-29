@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { commonStyles } from "../../styles/common";
 
 const SearchInput = ({
@@ -45,12 +44,6 @@ const SearchInput = ({
       </span>
     </div>
   );
-};
-
-SearchInput.propTypes = {
-  placeholder: PropTypes.string,
-  width: PropTypes.string,
-  onChange: PropTypes.func,
 };
 
 export default SearchInput;

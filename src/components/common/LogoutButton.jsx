@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { commonStyles } from "../../styles/common";
 import { IoIosLogOut } from "react-icons/io";
 
@@ -23,10 +22,6 @@ const LogoutButton = ({ onClick }) => {
       <span>Logout</span>
     </button>
   );
-};
-
-LogoutButton.propTypes = {
-  onClick: PropTypes.func.isRequired,
 };
 
 export default LogoutButton;
