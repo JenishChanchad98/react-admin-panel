@@ -40,6 +40,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Login Actions
       .addCase(userLogin.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -52,7 +53,9 @@ const authSlice = createSlice({
       })
       .addCase(userLogin.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload
+          ? action.payload.message
+          : action.error.message;
       });
   },
 });

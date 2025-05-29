@@ -1,12 +1,10 @@
-import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { commonStyles } from "../../styles/common";
 import { useSelector } from "react-redux";
 
 const UserProfile = () => {
   const navigate = useNavigate();
-
-  const userData = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.userProfile);
 
   const getInitials = (name) => {
     if (!name) return "👤";
@@ -44,7 +42,7 @@ const UserProfile = () => {
           fontSize: "16px",
         }}
       >
-        {getInitials(userData?.fullName)}
+        {getInitials(user?.fullName)}
       </div>
       <span
         style={{
@@ -52,16 +50,10 @@ const UserProfile = () => {
           whiteSpace: "nowrap",
         }}
       >
-        {userData?.fullName || "User"}
+        {user?.fullName || "User"}
       </span>
     </div>
   );
-};
-
-UserProfile.propTypes = {
-  userData: PropTypes.shape({
-    fullName: PropTypes.string,
-  }),
 };
 
 export default UserProfile;

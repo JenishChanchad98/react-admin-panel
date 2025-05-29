@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import { saveToken } from "../utils/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { userLogin } from "../store/slices/authSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -40,9 +40,9 @@ export default function Login() {
       const result = await dispatch(userLogin({ email, password })).unwrap();
       saveToken(result.data.token);
       navigate("/dashboard");
-    } catch (err) {
+    } catch (error) {
       setError(
-        err?.response?.data?.message || "Incorrect username or password."
+        error?.response?.data?.message || "Incorrect username or password."
       );
       setEmail("");
       setPassword("");

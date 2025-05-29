@@ -1,55 +1,53 @@
 import { useState, useEffect } from "react";
 import { FaUser, FaEnvelope, FaPhone, FaCamera } from "react-icons/fa";
 import { commonStyles } from "../styles/common";
-import { getProfileAPI, updateProfileAPI } from "../api/authApi";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProfile, updateProfile } from "../store/slices/userProfileSlice";
 
 export default function Profile() {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const { user, loading, error } = useSelector((state) => state.userProfile);
+
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    dispatch(fetchProfile());
+  }, [dispatch]);
 
-  const fetchUserProfile = async () => {
-    try {
-      const response = await getProfileAPI();
-      setUserData(response.data.data);
-      setFullName(response.data.data.fullName);
-    } catch (err) {
-      setError("Failed to fetch profile data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    setFullName(user?.fullName ?? "");
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     try {
-      await updateProfileAPI({ name: fullName });
-      await fetchUserProfile();
+      const { status } = await dispatch(
+        updateProfile({ name: fullName })
+      ).unwrap();
+      if (status === "success") {
+        dispatch(fetchProfile());
+      }
       setIsEditing(false);
-    } catch (err) {
-      setError(err?.response?.data?.message || "Failed to update profile");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const getInitials = (name) => {
-    if (!name) return "👤";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
+  const getInitials = (name) =>
+    name
+      ? name
+          .split(" ")
+          .filter(Boolean)
+          .map((n) => n[0].toUpperCase())
+          .join("")
+      : "👤";
 
-  if (loading && !userData) {
+  if (loading && !user) {
     return (
       <div style={{ ...commonStyles.flexCenter, height: "100vh" }}>
         Loading...
@@ -116,7 +114,7 @@ export default function Profile() {
               position: "relative",
             }}
           >
-            {getInitials(userData?.fullName)}
+            {getInitials(user?.fullName)}
             <div
               style={{
                 position: "absolute",
@@ -158,7 +156,7 @@ export default function Profile() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={saving}
                   style={{
                     padding: "10px 20px",
                     borderRadius: commonStyles.borderRadius.medium,
@@ -169,7 +167,7 @@ export default function Profile() {
                     ...commonStyles.transition,
                   }}
                 >
-                  {loading ? "Saving..." : "Save Name"}
+                  {saving ? "Saving..." : "Save Name"}
                 </button>
               </form>
             ) : (
@@ -183,7 +181,7 @@ export default function Profile() {
                   }}
                 >
                   <FaUser color={commonStyles.colors.primary} />
-                  <span style={{ fontSize: "18px" }}>{userData?.fullName}</span>
+                  <span style={{ fontSize: "18px" }}>{user?.fullName}</span>
                 </div>
 
                 <div
@@ -195,7 +193,7 @@ export default function Profile() {
                   }}
                 >
                   <FaEnvelope color={commonStyles.colors.primary} />
-                  <span>{userData?.email}</span>
+                  <span>{user?.email}</span>
                 </div>
 
                 <div
@@ -206,7 +204,7 @@ export default function Profile() {
                   }}
                 >
                   <FaPhone color={commonStyles.colors.primary} />
-                  <span>{userData?.mobileNo}</span>
+                  <span>{user?.mobileNo}</span>
                 </div>
               </div>
             )}
@@ -249,7 +247,9 @@ export default function Profile() {
                 Member Since
               </p>
               <p style={{ margin: 0 }}>
-                {new Date(userData?.updatedAt).getFullYear()}
+                {user?.updatedAt
+                  ? new Date(user.updatedAt).getFullYear()
+                  : "N/A"}
               </p>
             </div>
             <div>
@@ -262,7 +262,9 @@ export default function Profile() {
                 Last Updated
               </p>
               <p style={{ margin: 0 }}>
-                {new Date(userData?.updatedAt).toLocaleDateString()}
+                {user?.updatedAt
+                  ? new Date(user.updatedAt).toLocaleDateString()
+                  : "N/A"}
               </p>
             </div>
           </div>
