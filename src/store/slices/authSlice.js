@@ -19,9 +19,10 @@ export const userLogin = createAsyncThunk(
 export const userRegister = createAsyncThunk(
   "auth/register",
   async (payload, { rejectWithValue }) => {
-    console.log("PAYLOAD : >>", payload);
     try {
-      const response = await api.post("/register", payload);
+      const response = await api.post("/register", payload, {
+        showToast: false,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -49,7 +50,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
     },
-    clearError: (state) => {
+    clearAuthError: (state) => {
       state.error = null;
     },
   },
@@ -78,11 +79,8 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(userRegister.fulfilled, (state, action) => {
+      .addCase(userRegister.fulfilled, (state) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.data.user;
-        state.token = action.payload.data.token;
       })
       .addCase(userRegister.rejected, (state, action) => {
         state.loading = false;
@@ -93,5 +91,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

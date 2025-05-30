@@ -15,10 +15,30 @@ export const toastConfig = {
 
 // Toast utility functions
 export const showToast = {
-  success: (message) => toast.success(message, toastConfig),
-  error: (message) => toast.error(message, toastConfig),
-  info: (message) => toast.info(message, toastConfig),
-  warning: (message) => toast.warning(message, toastConfig),
+  success: (message, callback) => {
+    toast.success(message, toastConfig);
+    if (callback) {
+      setTimeout(callback, toastConfig.autoClose);
+    }
+  },
+  error: (message, callback) => {
+    toast.error(message, toastConfig);
+    if (callback) {
+      setTimeout(callback, toastConfig.autoClose);
+    }
+  },
+  info: (message, callback) => {
+    toast.info(message, toastConfig);
+    if (callback) {
+      setTimeout(callback, toastConfig.autoClose);
+    }
+  },
+  warning: (message, callback) => {
+    toast.warning(message, toastConfig);
+    if (callback) {
+      setTimeout(callback, toastConfig.autoClose);
+    }
+  },
 };
 
 // Toast container component configuration

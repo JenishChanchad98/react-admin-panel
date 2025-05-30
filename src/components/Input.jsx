@@ -1,11 +1,11 @@
-export default function Input({ type, value, onChange, placeholder }) {
+export default function Input({ name, value, onChange, ...rest }) {
   return (
     <input
-      type={type}
+      name={name}
       value={value}
       onChange={onChange}
-      placeholder={placeholder}
-      style={{ padding: "10px", marginBottom: "10px", width: "100%" }}
+      {...rest}
+      // className="input-class"
     />
   );
 }

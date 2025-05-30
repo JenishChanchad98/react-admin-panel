@@ -6,10 +6,9 @@ import { saveToken } from "../utils/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { userLogin } from "../store/slices/authSlice";
 import { useDispatch } from "react-redux";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import Spinner from "../components/Spinner";
+import { showToast } from "../utils/toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -43,8 +42,7 @@ export default function Login() {
     try {
       const result = await dispatch(userLogin({ email, password })).unwrap();
       saveToken(result.data.token);
-      toast.success(result.data.message);
-      setTimeout(() => navigate("/dashboard"), 2000);
+      showToast.success(result.message, () => navigate("/dashboard"));
     } catch (error) {
       setError(
         error?.response?.data?.message || "Incorrect username or password."
@@ -65,15 +63,8 @@ export default function Login() {
         justifyContent: "center",
       }}
     >
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        newestOnTop
-        hideProgressBar={false}
-      />
       <div className="login-container">
         <h2>Login</h2>
-
         {error && (
           <p
             style={{ color: "red", marginBottom: "16px", textAlign: "center" }}

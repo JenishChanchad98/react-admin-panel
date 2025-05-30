@@ -1,69 +1,76 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import { saveToken } from "../utils/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { userRegister } from "../store/slices/authSlice";
-
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
+import { useDispatch, useSelector } from "react-redux";
+import { clearAuthError, userRegister } from "../store/slices/authSlice";
 import Spinner from "../components/Spinner";
+import { showToast } from "../utils/toast";
+
+const initialForm = { fullName: "", email: "", mobileNo: "+91", password: "" };
 
 export default function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { error: apiError } = useSelector((state) => state.auth);
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobileNo, setMobileNo] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState(initialForm);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState("");
 
+  let displayError = validationError || apiError;
+
+  const onChange = useCallback(
+    (e) => {
+      if (validationError) setValidationError("");
+      if (apiError) dispatch(clearAuthError());
+
+      setForm((prevForm) => ({
+        ...prevForm,
+        [e.target.name]: e.target.value,
+      }));
+    },
+    [validationError, apiError, dispatch]
+  );
+
+  const togglePassword = () => setShowPassword((v) => !v);
+
   const validateForm = () => {
+    const { fullName, email, mobileNo, password } = form;
     if (!fullName.trim()) return "Full name is required.";
     if (!email.trim()) return "Email is required.";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return "Invalid email format.";
-    if (!mobileNo.trim()) return "Mobile Number is required.";
-    const mobileRegex = /^[6-9]\d{9}$/;
-    if (!mobileRegex.test(mobileNo)) return "Invalid mobile number.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return "Invalid email format.";
+    if (!mobileNo.trim()) return "Mobile number is required.";
     if (!password.trim()) return "Password is required.";
     if (password.length < 6) return "Password must be at least 6 characters.";
     return "";
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const error = validateForm();
-    if (error) {
-      setValidationError(error);
-      return;
-    }
-    setValidationError("");
-    setLoading(true);
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const error = validateForm();
+      if (error) return setValidationError(error);
+      setValidationError("");
+      setLoading(true);
 
-    try {
-      const result = await dispatch(
-        userRegister({ fullName, email, mobileNo, password })
-      ).unwrap();
-
-      saveToken(result.data.data);
-      toast.success(result.data.message || "Registration successful!");
-      setTimeout(() => navigate("/dashboard"), 1000);
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message ||
-          "Registration failed, please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        const result = await dispatch(userRegister(form)).unwrap();
+        showToast.success(result.message || "Registration successful", () => {
+          setForm(initialForm);
+          navigate("/login");
+        });
+      } catch (error) {
+        console.log("ERROR : >>", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [dispatch, form, navigate]
+  );
 
   return (
     <div
@@ -74,46 +81,49 @@ export default function Register() {
         justifyContent: "center",
       }}
     >
-      <ToastContainer position="top-right" autoClose={3000} newestOnTop />
       <div className="login-container">
         <h2>Sign Up</h2>
 
-        {validationError && (
+        {displayError && (
           <p
             style={{ color: "red", marginBottom: "16px", textAlign: "center" }}
           >
-            {validationError}
+            {displayError}
           </p>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ width: "92%" }}>
           <Input
+            name="fullName"
             type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            value={form.fullName}
+            onChange={onChange}
             placeholder="Full name"
           />
           <Input
+            name="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={form.email}
+            onChange={onChange}
             placeholder="Email"
           />
           <Input
+            name="mobileNo"
             type="text"
-            value={mobileNo}
-            onChange={(e) => setMobileNo(e.target.value)}
+            value={form.mobileNo}
+            onChange={onChange}
             placeholder="Mobile Number"
           />
           <div style={{ position: "relative" }}>
             <Input
+              name="password"
               type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={form.password}
+              onChange={onChange}
               placeholder="Password"
             />
             <span
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={togglePassword}
               style={{
                 position: "absolute",
                 right: "10px",

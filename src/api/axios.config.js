@@ -5,9 +5,7 @@ import { showToast } from "../utils/toast";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
   timeout: 10000, // 10 seconds timeout
 });
 
@@ -18,6 +16,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Set default toast behavior to true if not explicitly false
+    if (config.showToast === undefined) {
+      config.showToast = true;
+    }
+
     return config;
   },
   (error) => {
@@ -28,19 +32,9 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Show success toast for successful POST, PUT, DELETE requests
-    if (response.config.method !== 'get' && response.data?.message) {
-      showToast.success(response.data.message);
-    }
     return response;
   },
   (error) => {
-    // Handle unauthorized access
-    if (error.response?.status === 401) {
-      store.dispatch({ type: "auth/logout" });
-      showToast.error("Session expired. Please login again.");
-    }
-    
     // Handle network errors
     if (!error.response) {
       showToast.error("Network error. Please check your internet connection.");
@@ -49,10 +43,19 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle API errors with messages
-    const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
-    showToast.error(errorMessage);
-    
+    // Handle unauthorized access
+    if (error.response.status === 401) {
+      store.dispatch({ type: "auth/logout" });
+      showToast.error("Session expired. Please login again.");
+    }
+
+    // Show error toast for all other errors
+    if (error.config?.showToast) {
+      const errorMessage =
+        error.response?.data?.message || "An error occurred. Please try again.";
+      showToast.error(errorMessage);
+    }
+
     return Promise.reject(error);
   }
 );
