@@ -46,15 +46,10 @@ export default function Header() {
     navigate("/login");
   };
 
-  const handleSearch = (e) => {
-    // Implement search functionality
-    console.log("Searching for:", e.target.value);
-  };
-
   return (
     <header style={headerStyles.container}>
       <div style={headerStyles.leftSection}>
-        <SearchInput onChange={handleSearch} />
+        <SearchInput />
       </div>
 
       <div style={headerStyles.rightSection}>

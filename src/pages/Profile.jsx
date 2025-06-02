@@ -4,6 +4,9 @@ import { commonStyles } from "../styles/common";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile, updateProfile } from "../store/slices/userProfileSlice";
 import Spinner from "../components/Spinner";
+import useDebounce from "../hooks/useDebounce";
+import { showToast } from "../utils/toast";
+import Input from "../components/Input";
 
 export default function Profile() {
   const dispatch = useDispatch();
@@ -13,31 +16,41 @@ export default function Profile() {
   const [fullName, setFullName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchProfile());
-  }, [dispatch]);
+  // Add debounced full name with 1000ms delay
+  const debouncedFullName = useDebounce(fullName, 1000);
 
   useEffect(() => {
-    setFullName(user?.fullName ?? "");
-  }, [user]);
+    if (!user) dispatch(fetchProfile());
+  }, [dispatch, user]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const { status } = await dispatch(
-        updateProfile({ name: fullName })
-      ).unwrap();
-      if (status === "success") {
-        dispatch(fetchProfile());
+  useEffect(() => {
+    if (user?.fullName) setFullName(user.fullName);
+  }, [user?.fullName]);
+
+  // Add effect to handle debounced updates
+  useEffect(() => {
+    const updateProfileWithDebounce = async () => {
+      if (debouncedFullName && debouncedFullName !== user?.fullName) {
+        setSaving(true);
+        try {
+          const { status, message } = await dispatch(
+            updateProfile({ name: debouncedFullName })
+          ).unwrap();
+          if (status === "success") {
+            dispatch(fetchProfile());
+            showToast.success(message);
+          }
+        } catch (error) {
+          console.error("Failed to update profile:", error);
+          showToast.error("Failed to update profile");
+        } finally {
+          setSaving(false);
+        }
       }
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
+    };
+
+    updateProfileWithDebounce();
+  }, [debouncedFullName, dispatch]);
 
   const getInitials = (name) =>
     name
@@ -71,7 +84,8 @@ export default function Profile() {
         <div style={{ ...commonStyles.flexBetween, marginBottom: "30px" }}>
           <h2 style={{ margin: 0 }}>Profile Information</h2>
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => !saving && setIsEditing(!isEditing)}
+            disabled={saving}
             style={{
               padding: "8px 20px",
               borderRadius: commonStyles.borderRadius.medium,
@@ -80,7 +94,8 @@ export default function Profile() {
                 ? commonStyles.colors.secondary
                 : commonStyles.colors.primary,
               color: "white",
-              cursor: "pointer",
+              cursor: saving ? "not-allowed" : "pointer",
+              opacity: saving ? 0.6 : 1,
               ...commonStyles.transition,
             }}
           >
@@ -136,16 +151,17 @@ export default function Profile() {
 
           <div style={{ flex: 1 }}>
             {isEditing ? (
-              <form onSubmit={handleSubmit}>
+              <div>
                 <div style={{ marginBottom: "20px" }}>
                   <label style={{ display: "block", marginBottom: "8px" }}>
                     Full Name
                   </label>
-                  <input
+                  <Input
                     type="text"
                     name="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    disabled={saving}
                     style={{
                       width: "100%",
                       padding: "10px",
@@ -155,33 +171,19 @@ export default function Profile() {
                   />
                 </div>
 
-                {saving ? (
+                {saving && (
                   <div
                     style={{
                       display: "flex",
-                      justifyContent: "center",
-                      marginTop: "10px",
+                      alignItems: "center",
+                      gap: "10px",
+                      color: commonStyles.colors.secondary,
                     }}
                   >
-                    <Spinner />
+                    <Spinner size="small" />
                   </div>
-                ) : (
-                  <button
-                    type="submit"
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: commonStyles.borderRadius.medium,
-                      border: "none",
-                      background: commonStyles.colors.primary,
-                      color: "white",
-                      cursor: "pointer",
-                      ...commonStyles.transition,
-                    }}
-                  >
-                    Submit
-                  </button>
                 )}
-              </form>
+              </div>
             ) : (
               <div>
                 <div

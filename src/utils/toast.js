@@ -55,14 +55,14 @@ export const ToastContainerConfig = {
   theme: "light",
 };
 
-// Success notification
-showToast.success("Operation completed successfully!");
+// // Success notification
+// showToast.success("Operation completed successfully!");
 
-// Error notification
-showToast.error("Something went wrong!");
+// // Error notification
+// showToast.error("Something went wrong!");
 
-// Info notification
-showToast.info("Please note this information.");
+// // Info notification
+// showToast.info("Please note this information.");
 
-// Warning notification
-showToast.warning("Be careful!");
+// // Warning notification
+// showToast.warning("Be careful!");
