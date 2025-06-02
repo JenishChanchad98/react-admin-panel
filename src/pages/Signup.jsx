@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthError, userRegister } from "../store/slices/authSlice";
 import Spinner from "../components/Spinner";
@@ -92,7 +91,15 @@ export default function Register() {
           </p>
         )}
 
-        <form onSubmit={handleSubmit} style={{ width: "92%" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
           <Input
             name="fullName"
             type="text"
@@ -114,27 +121,15 @@ export default function Register() {
             onChange={onChange}
             placeholder="Mobile Number"
           />
-          <div style={{ position: "relative" }}>
-            <Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              onChange={onChange}
-              placeholder="Password"
-            />
-            <span
-              onClick={togglePassword}
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                cursor: "pointer",
-              }}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-          </div>
+          <Input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={form.password}
+            onChange={onChange}
+            placeholder="Password"
+            togglePassword={togglePassword}
+            showPassword={showPassword}
+          />
           {loading ? (
             <div
               style={{

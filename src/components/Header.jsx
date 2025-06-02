@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import SearchInput from "./common/SearchInput";
 import UserProfile from "./common/UserProfile";
 import LogoutButton from "./common/LogoutButton";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { fetchProfile } from "../store/slices/userProfileSlice";
 
 const headerStyles = {
@@ -37,8 +37,6 @@ export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { user, loading } = useSelector((state) => state.auth);
-
   useEffect(() => {
     dispatch(fetchProfile());
   }, [dispatch]);
@@ -60,7 +58,7 @@ export default function Header() {
       </div>
 
       <div style={headerStyles.rightSection}>
-        <UserProfile userData={user} loading={loading} />
+        <UserProfile />
         <LogoutButton onClick={handleLogout} />
       </div>
     </header>

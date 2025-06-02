@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { saveToken } from "../utils/auth";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { userLogin } from "../store/slices/authSlice";
 import { useDispatch } from "react-redux";
 
@@ -19,6 +18,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const togglePassword = () => setShowPassword((v) => !v);
 
   const validateForm = () => {
     if (!email.trim()) return "Email is required.";
@@ -81,27 +82,15 @@ export default function Login() {
             placeholder="Email"
           />
 
-          <div style={{ position: "relative" }}>
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-            />
-            <span
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                cursor: "pointer",
-              }}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-          </div>
-
+          <Input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            togglePassword={togglePassword}
+            showPassword={showPassword}
+          />
           {loading ? (
             <div
               style={{
