@@ -3,18 +3,16 @@ import { FaUser, FaEnvelope, FaPhone, FaCamera } from "react-icons/fa";
 import { commonStyles } from "../styles/common";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile, updateProfile } from "../store/slices/userProfileSlice";
-import Spinner from "../components/Spinner";
 import useDebounce from "../hooks/useDebounce";
-import { showToast } from "../utils/toast";
 import Input from "../components/Input";
+import { IoMdArrowBack } from "react-icons/io";
 
 export default function Profile() {
   const dispatch = useDispatch();
-  const { user, loading, error } = useSelector((state) => state.userProfile);
+  const { user, error } = useSelector((state) => state.userProfile);
 
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [saving, setSaving] = useState(false);
 
   // Add debounced full name with 1000ms delay
   const debouncedFullName = useDebounce(fullName, 1000);
@@ -31,21 +29,12 @@ export default function Profile() {
   useEffect(() => {
     const updateProfileWithDebounce = async () => {
       if (debouncedFullName && debouncedFullName !== user?.fullName) {
-        setSaving(true);
-        try {
-          const { status, message } = await dispatch(
-            updateProfile({ name: debouncedFullName })
-          ).unwrap();
-          if (status === "success") {
-            dispatch(fetchProfile());
-            showToast.success(message);
-          }
-        } catch (error) {
-          console.error("Failed to update profile:", error);
-          showToast.error("Failed to update profile");
-        } finally {
-          setSaving(false);
-        }
+        dispatch(updateProfile({ name: debouncedFullName }))
+          .unwrap()
+          .then(({ status }) => {
+            if (status === "success") dispatch(fetchProfile());
+          })
+          .catch(console.error);
       }
     };
 
@@ -60,14 +49,6 @@ export default function Profile() {
           .map((n) => n[0].toUpperCase())
           .join("")
       : "👤";
-
-  if (loading && !user) {
-    return (
-      <div style={{ ...commonStyles.flexCenter, height: "100vh" }}>
-        <Spinner />
-      </div>
-    );
-  }
 
   return (
     <div style={{ padding: "20px 30px" }}>
@@ -84,8 +65,7 @@ export default function Profile() {
         <div style={{ ...commonStyles.flexBetween, marginBottom: "30px" }}>
           <h2 style={{ margin: 0 }}>Profile Information</h2>
           <button
-            onClick={() => !saving && setIsEditing(!isEditing)}
-            disabled={saving}
+            onClick={() => setIsEditing(!isEditing)}
             style={{
               padding: "8px 20px",
               borderRadius: commonStyles.borderRadius.medium,
@@ -94,12 +74,22 @@ export default function Profile() {
                 ? commonStyles.colors.secondary
                 : commonStyles.colors.primary,
               color: "white",
-              cursor: saving ? "not-allowed" : "pointer",
-              opacity: saving ? 0.6 : 1,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
               ...commonStyles.transition,
             }}
           >
-            {isEditing ? "Cancel" : "Edit Name"}
+            {isEditing ? (
+              <>
+                <IoMdArrowBack />
+                Back
+              </>
+            ) : (
+              "Edit Name"
+            )}
           </button>
         </div>
 
@@ -161,7 +151,6 @@ export default function Profile() {
                     name="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    disabled={saving}
                     style={{
                       width: "100%",
                       padding: "10px",
@@ -170,19 +159,6 @@ export default function Profile() {
                     }}
                   />
                 </div>
-
-                {saving && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      color: commonStyles.colors.secondary,
-                    }}
-                  >
-                    <Spinner size="small" />
-                  </div>
-                )}
               </div>
             ) : (
               <div>
